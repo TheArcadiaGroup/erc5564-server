@@ -16,7 +16,7 @@
   },
   "blockchain": {
     "1": {
-      "httpProvider": "",
+      "httpProvider": "https://mainnet.infura.io/v3/3a6c72cdf9e846968d21c0f3605013fd",
       "wsProvider": "",
       "explorer": "https://etherscan.io",
       "confirmations": 12,

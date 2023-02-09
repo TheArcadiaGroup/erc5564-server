@@ -1,5 +1,5 @@
-import Web3 from 'web3';
-import GenericBridgeABI from '../contractABI/GenericBridge.json'
+import Web3 from'web3';
+import GenericBridgeABI from '../contractABI/PubStealthInfoContract.json'
 const config = require('config')
 interface Web3AndRPC {
     web3: any;
