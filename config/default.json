@@ -1,0 +1,41 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 3000
+  },
+  "nativeAddress": "0x1111111111111111111111111111111111111111",
+  "logs": {
+    "level": "debug"
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6379
+  },
+  "crawlChainIds": {
+    "testnet": [1]
+  },
+  "blockchain": {
+    "1": {
+      "httpProvider": "",
+      "wsProvider": "",
+      "explorer": "https://etherscan.io",
+      "confirmations": 12,
+      "nativeName": "Ethereum",
+      "nativeSymbol": "ETH"
+    }
+  },
+  "contracts": {
+    "1" : {
+    "ierc5564Address": "0x02b758ce469af940C57A42aD1dE5D404122bc283",
+    "firstBlockCrawl": 14895882
+     }
+},
+  "db": {
+    "uri": {
+      "mainnet": "mongodb://localhost:27017/ierc5564Mainnet",
+      "testnet": "mongodb://localhost:27017/ierc5564"
+    }
+  },
+  "networkTocrawl": "testnet",
+  "signatureServer": []
+}
