@@ -5,14 +5,16 @@ export default interface Transaction {
     viewingPublickey: string;
     spendingPublickey: string;
     viewTag: string,
-    stealthAddress : String,
+    stealthRecipient : String,
 }
 
 const transactionSchema = new Schema<Transaction>({
     viewingPublickey: { type: String, required: true, unique: true },
     spendingPublickey: { type: String, required: true },
     viewTag: { type: String, required: true },
-    stealthAddress: { type: String, required: true },
+    stealthRecipient: { type: String, required: true },
+    
+
 
 });
 transactionSchema.index({ _id: 1, status: 1 });
