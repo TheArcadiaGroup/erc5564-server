@@ -1,6 +1,6 @@
 const config = require('config')
 import Web3Util from './web3'
-import db from '../models'
+// import db from '../models'
 
 const EventHelper = {
 

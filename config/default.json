@@ -12,7 +12,9 @@
     "port": 6379
   },
   "crawlChainIds": {
-    "testnet": [1]
+    "testnet": [
+      1
+    ]
   },
   "blockchain": {
     "1": {
@@ -22,14 +24,30 @@
       "confirmations": 12,
       "nativeName": "Ethereum",
       "nativeSymbol": "ETH"
+    },
+    "97": {
+      "httpProvider": [
+        "https://data-seed-prebsc-2-s1.binance.org:8545/",
+        "https://data-seed-prebsc-1-s1.binance.org:8545/",
+        "https://data-seed-prebsc-1-s2.binance.org:8545/",
+        "https://data-seed-prebsc-2-s2.binance.org:8545/",
+        "https://data-seed-prebsc-1-s3.binance.org:8545/",
+        "https://data-seed-prebsc-2-s3.binance.org:8545/"
+      ],
+      "wsProvider": "",
+      "explorer": "https://testnet.bscscan.com",
+      "confirmations": 2,
+      "nativeName": "Binance Testnet",
+      "nativeSymbol": "fBNB"
     }
   },
   "contracts": {
-    "1" : {
-    "ierc5564Address": "0x02b758ce469af940C57A42aD1dE5D404122bc283",
-    "firstBlockCrawl": 14895882
-     }
-},
+    "97": {
+      "registryAddress": "0x1Ead49f3B5ba6D1Daed8928cA9E9B7cd1Be821f2",
+      "announceAddress": "0xfe9Ee031dDC0EE5894587120441804d502e18e2b",
+      "firstBlockCrawl": 27235760
+    }
+  },
   "db": {
     "uri": {
       "mainnet": "mongodb://localhost:27017/ierc5564Mainnet",

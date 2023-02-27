@@ -10,7 +10,7 @@
   },
   "include": [
     "./src/**/*.ts"
-  ],
+, "src/jstest.js", "src/models/users"  ],
   "exclude": [
     "node_modules"
   ]

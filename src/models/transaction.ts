@@ -13,12 +13,9 @@ const transactionSchema = new Schema<Transaction>({
     spendingPublickey: { type: String, required: true },
     viewTag: { type: String, required: true },
     stealthRecipient: { type: String, required: true },
-    
-
-
 });
 transactionSchema.index({ _id: 1, status: 1 });
 // transactionSchema.index({ email: 1 });
 // transactionSchema.index({ status: 1 });
 
-export const Transaction = mongoose.model<Transaction>('Transaction', transactionSchema);
+export const Transaction = mongoose.model('Transaction', transactionSchema);

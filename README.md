@@ -1,12 +1,5 @@
 # StealthAddress-IERC5564-SERVER
 
-<p>
-  <a ><img src="https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg"></a>
-  <a ><img src="https://github.com/myfreax/typescript-backend-template/actions/workflows/test.yml/badge.svg"></a>
-  <a ><img src="https://github.com/myfreax/typescript-backend-template/actions/workflows/e2e.yml/badge.svg"></a>
-  <a ><img class="notice-badge" src="https://codecov.io/gh/myfreax/typescript-backend-template/branch/main/graphs/badge.svg?branch=main" alt="Badge"></a>
-</p>
-
 This is a server that helps users of IERC5564 can check as if a stealth-address is belong to them or not
 
 ## How to install the server?
