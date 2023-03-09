@@ -1,3 +1,5 @@
+require("dotenv").config();
+const config = require('config')
 var Web3 = require("web3");
 const utils = require("ethereumjs-util")
 const ecc = require("genjs-ecc");
@@ -9,7 +11,9 @@ const RegistryABI = require("./contractABI/SampleRegistry.json")
 const GeneratorABI = require("./contractABI/SampleGenerator.json")
 const MessengerABI = require("./contractABI/SampleMessenger.json")
 const Web3Utils = require("./helpers/web3")
-const config = require('config')
+
+
+
 
 
 
@@ -130,18 +134,25 @@ async function generateStealthAddress(registrant, networkId, ephemeralPrivKey, a
 }
 
 async function registerKeys(addressCallFunction, networkId, spendingPubKey, viewingPubKey) {
+    try {
+        let both = await Web3Utils.getWeb3AndRPC(networkId);
+        let web3 = both.web3
+        let contractGeneratorAddress = config.contracts[networkId].generatorAddress
 
-    let both = await Web3Utils.getWeb3AndRPC(networkId);
-    let web3 = both.web3
-    let contractGeneratorAddress = config.contracts[networkId].generatorAddress
-    let contractRegistyAddress = config.contracts[networkId].registryAddress
-    console.log("a")
+        let contractRegistyAddress = config.contracts[networkId].registryAddress
 
-    const contractRegistry = new web3.eth.Contract(RegistryABI, contractRegistyAddress)
-    console.log("b")
+        const contractRegistry = new web3.eth.Contract(RegistryABI, contractRegistyAddress)
+        const _spendPub = "0x" + spendingPubKey
+        const _viewPub = "0x" + viewingPubKey
 
-    const result = await contractRegistry.methods.registerKeys(contractGeneratorAddress, spendingPubKey, viewingPubKey).call({ from: addressCallFunction });
-    // console.log(result)
+        const result = await contractRegistry.methods.registerKeys(contractGeneratorAddress, _spendPub, _viewPub).send({ from: addressCallFunction });
+        console.log("done")
+        // console.log(result)
+
+    } catch (e) { 
+        console.log(e)
+    }
+
 }
 
 
@@ -149,11 +160,27 @@ async function registerKeys(addressCallFunction, networkId, spendingPubKey, view
 async function main() {
     let acc1 = '0xDAf16065A7581f867294860735a3b53EB2dA00A6'
     let acc2 = '0x4385F9532855d149068A32e42b07687264a94EEA'
+    // get rpc
+    let both = await Web3Utils.getWeb3AndRPC(97);
+    let rpc = both.rpc
+
+    // console.log("both: ", both)
+    const privateKey1 = process.env.PRIVATE_KEY1;
+    console.log("privateKey1: ", privateKey1)
+    const web3 = new Web3(new PrivateKeyProvider(privateKey1, rpc));
+    const accounts1 = await web3.eth.getAccounts();
+    console.log("accounts1: ", accounts1)
+    const mainAccount1 = accounts1[0];
+    const privateKey2 = process.env.PRIVATE_KEY2;
+    const web32 = new Web3(new PrivateKeyProvider(privateKey2, rpc));
+    const accounts2 = await web32.eth.getAccounts();
+    const mainAccount2 = accounts2[0];
+
     // getkey
     let resultGetKey = await getKey();
-    console.log(resultGetKey)
+    // console.log(resultGetKey)
     // registry for account
-    let resultRegistryKeys = await registerKeys(acc1, 97, resultGetKey.account1_spendPub, resultGetKey.account1_viewPub)
+    let resultRegistryKeys = await registerKeys(mainAccount1, 97, resultGetKey.account1_spendPub, resultGetKey.account1_viewPub)
     console.log(resultRegistryKeys)
 
 

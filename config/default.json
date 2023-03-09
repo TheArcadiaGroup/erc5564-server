@@ -43,8 +43,9 @@
   },
   "contracts": {
     "97": {
-      "registryAddress": "0x1Ead49f3B5ba6D1Daed8928cA9E9B7cd1Be821f2",
-      "announceAddress": "0xfe9Ee031dDC0EE5894587120441804d502e18e2b",
+      "registryAddress": "0x5F567c251C03BD320f610Ea5282A37344BE47A0e",
+      "announceAddress": "0xe3324d795F067b618B96c8d94AA9371D9142A102",
+      "generatorAddress": "0x3D1Ab1052A1d72bc798039996Bd5ae308e75aD22",
       "firstBlockCrawl": 27235760
     }
   },
