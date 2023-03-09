@@ -5,6 +5,12 @@ const privateKeyToPublicKey = require('ethereum-private-key-to-public-key')
 var PrivateKeyProvider = require("truffle-privatekey-provider");
 const secp256k1 = require('secp256k1')
 const { randomBytes } = require('crypto')
+const RegistryABI = require("./contractABI/SampleRegistry.json")
+const GeneratorABI = require("./contractABI/SampleGenerator.json")
+const MessengerABI = require("./contractABI/SampleMessenger.json")
+const Web3Utils = require("./helpers/web3")
+const config = require('config')
+
 
 
 // var privateKey = "62537136911bca3a7e2b....";
@@ -12,7 +18,6 @@ const { randomBytes } = require('crypto')
 
 
 // // var secp256k1 = require('elliptic-curve').secp256k1
-// import Web3Utils from "./helpers/web3"
 // import ecc from 'eosjs-ecc'
 
 
@@ -36,51 +41,124 @@ async function getRandomHex() {
 
 async function getKey() {
     // var web3 = new Web3('http://localhost:8545'); // your geth
-    console.log("Account 1: ")
+    // console.log("Account 1: ")
     let viewingPrivate1 = await randomBytes(32)
     const viewPri1 = Buffer.from(viewingPrivate1).toString("hex")
-    console.log("viewingPrivate1 : ", viewPri1)
-    const pubKey = secp256k1.publicKeyCreate(viewingPrivate1, false)
-    let pkString = Buffer.from(pubKey).toString("hex")
+    // console.log("viewingPrivate1 : ", viewPri1)
+    const viewpubKey = secp256k1.publicKeyCreate(viewingPrivate1, false)
+    let pkString = Buffer.from(viewpubKey).toString("hex")
 
-    console.log(" viewPub1 :", pkString)
+    // console.log(" viewPub1 :", pkString)
 
 
 
     let spendingPrivate1 = await randomBytes(32)
     const spendPri1 = Buffer.from(spendingPrivate1).toString("hex")
-    console.log("spendingPrivate1 : ", spendPri1)
+    // console.log("spendingPrivate1 : ", spendPri1)
     const pubKey1 = secp256k1.publicKeyCreate(spendingPrivate1, false)
     let pkString1 = Buffer.from(pubKey1).toString("hex")
-    console.log(" spendPub1 :", pkString1)
+    // console.log(" spendPub1 :", pkString1)
 
 
 
 
-    console.log("Account 2: ")
+    // console.log("Account 2: ")
 
     let viewingPrivate2 = await randomBytes(32)
     const viewPri2 = Buffer.from(viewingPrivate2).toString("hex")
-    console.log("viewingPrivate2 : ", viewPri2)
+    // console.log("viewingPrivate2 : ", viewPri2)
     const pubKey2 = secp256k1.publicKeyCreate(viewingPrivate2, false)
     let pkString2 = Buffer.from(pubKey2).toString("hex")
 
-    console.log(" viewPub2 :", pkString2)
+    // console.log(" viewPub2 :", pkString2)
 
 
 
     let spendingPrivate2 = await randomBytes(32)
     const spendPri2 = Buffer.from(spendingPrivate2).toString("hex")
-    console.log("spendingPrivate2 : ", spendPri2)
+    // console.log("spendingPrivate2 : ", spendPri2)
     const pubKey3 = secp256k1.publicKeyCreate(spendingPrivate2, false)
     let pkString3 = Buffer.from(pubKey3).toString("hex")
-    console.log(" spendPub2 :", pkString3)
+    // console.log(" spendPub2 :", pkString3)
+
+    return {
+        account1_viewPri: viewPri1,
+        account1_viewPub: pkString,
+        account1_spendPri: spendPri1,
+        account1_spendPub: pkString1,
+        account2_viewPri: viewPri2,
+        account2_viewPub: pkString2,
+        account2_spendPri: spendPri2,
+        account2_spendPub: pkString3,
+    }
 
 
 
 }
+async function readStealthKeys(registrant, networkId) {
 
-getKey()
+    let both = await Web3Utils.getWeb3AndRPC(networkId);
+    let web3 = both.web3
+    let contractGeneratorAddress = config.contracts[networkId].generatorAddress
+    const contractGenerator = new web3.eth.Contract(GeneratorABI, contractGeneratorAddress);
+
+    const result = await contractGenerator.methods.stealthKeys(registrant).call();
+    console.log(result)
+    return {
+        spendingPubKeyX: result[0],
+        spendingPubKeyY: result[1],
+        viewingPubKeyX: result[2],
+        viewingPubKeyY: result[3]
+    };
+}
+
+async function generateStealthAddress(registrant, networkId, ephemeralPrivKey, addressCallFunction) {
+
+    let both = await Web3Utils.getWeb3AndRPC(networkId);
+    let web3 = both.web3
+    let contractGeneratorAddress = config.contracts[networkId].generatorAddress
+    const contractGenerator = new web3.eth.Contract(GeneratorABI, contractGeneratorAddress);
+
+    const result = await contractGenerator.methods.stealthKeys(registrant).call({ from: addressCallFunction });
+    console.log(result)
+    return {
+        spendingPubKeyX: result[0],
+        spendingPubKeyY: result[1],
+        viewingPubKeyX: result[2],
+        viewingPubKeyY: result[3]
+    };
+}
+
+async function registerKeys(addressCallFunction, networkId, spendingPubKey, viewingPubKey) {
+
+    let both = await Web3Utils.getWeb3AndRPC(networkId);
+    let web3 = both.web3
+    let contractGeneratorAddress = config.contracts[networkId].generatorAddress
+    let contractRegistyAddress = config.contracts[networkId].registryAddress
+    console.log("a")
+
+    const contractRegistry = new web3.eth.Contract(RegistryABI, contractRegistyAddress)
+    console.log("b")
+
+    const result = await contractRegistry.methods.registerKeys(contractGeneratorAddress, spendingPubKey, viewingPubKey).call({ from: addressCallFunction });
+    // console.log(result)
+}
+
+
+
+async function main() {
+    let acc1 = '0xDAf16065A7581f867294860735a3b53EB2dA00A6'
+    let acc2 = '0x4385F9532855d149068A32e42b07687264a94EEA'
+    // getkey
+    let resultGetKey = await getKey();
+    console.log(resultGetKey)
+    // registry for account
+    let resultRegistryKeys = await registerKeys(acc1, 97, resultGetKey.account1_spendPub, resultGetKey.account1_viewPub)
+    console.log(resultRegistryKeys)
+
+
+}
+main()
 
 
 
