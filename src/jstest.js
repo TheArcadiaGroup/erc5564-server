@@ -116,27 +116,28 @@ async function readStealthKeys(registrant, networkId) {
     };
 }
 
-async function generateStealthAddress(registrant, networkId, ephemeralPrivKey, addressCallFunction) {
+async function generateStealthAddress(web3, registrant, networkId, ephemeralPrivKey, addressCallFunction) {
 
     let both = await Web3Utils.getWeb3AndRPC(networkId);
-    let web3 = both.web3
+    // let web3 = both.web3
     let contractGeneratorAddress = config.contracts[networkId].generatorAddress
     const contractGenerator = new web3.eth.Contract(GeneratorABI, contractGeneratorAddress);
+    let _ephemeralPrivKey = "0x" + ephemeralPrivKey
 
-    const result = await contractGenerator.methods.stealthKeys(registrant).call({ from: addressCallFunction });
+    const result = await contractGenerator.methods.generateStealthAddress(registrant, _ephemeralPrivKey).send({ from: addressCallFunction });
     console.log(result)
     return {
-        spendingPubKeyX: result[0],
-        spendingPubKeyY: result[1],
-        viewingPubKeyX: result[2],
-        viewingPubKeyY: result[3]
+        stealthAddress: result[0],
+        ephemeralPubKey: result[1],
+        sharedSecret: result[2],
+        viewTag: result[3]
     };
 }
 
-async function registerKeys(addressCallFunction, networkId, spendingPubKey, viewingPubKey) {
+async function registerKeys(web3, addressCallFunction, networkId, spendingPubKey, viewingPubKey) {
     try {
         let both = await Web3Utils.getWeb3AndRPC(networkId);
-        let web3 = both.web3
+        // let web3 = both.web3
         let contractGeneratorAddress = config.contracts[networkId].generatorAddress
 
         let contractRegistyAddress = config.contracts[networkId].registryAddress
@@ -144,8 +145,12 @@ async function registerKeys(addressCallFunction, networkId, spendingPubKey, view
         const contractRegistry = new web3.eth.Contract(RegistryABI, contractRegistyAddress)
         const _spendPub = "0x" + spendingPubKey
         const _viewPub = "0x" + viewingPubKey
-
-        const result = await contractRegistry.methods.registerKeys(contractGeneratorAddress, _spendPub, _viewPub).send({ from: addressCallFunction });
+        console.log("khai", addressCallFunction)
+        const result = await contractRegistry.methods
+            .registerKeys(contractGeneratorAddress, _spendPub, _viewPub)
+            .send({ from: addressCallFunction }, async function (err, data) {
+                console.log('kkkkk', err, data)
+            });
         console.log("done")
         // console.log(result)
 
@@ -168,9 +173,9 @@ async function main() {
     const privateKey1 = process.env.PRIVATE_KEY1;
     console.log("privateKey1: ", privateKey1)
     const web3 = new Web3(new PrivateKeyProvider(privateKey1, rpc));
-    const accounts1 = await web3.eth.getAccounts();
+    const accounts1 = await web3.eth.getCoinbase();
     console.log("accounts1: ", accounts1)
-    const mainAccount1 = accounts1[0];
+    const mainAccount1 = accounts1
     const privateKey2 = process.env.PRIVATE_KEY2;
     const web32 = new Web3(new PrivateKeyProvider(privateKey2, rpc));
     const accounts2 = await web32.eth.getAccounts();
@@ -180,8 +185,15 @@ async function main() {
     let resultGetKey = await getKey();
     // console.log(resultGetKey)
     // registry for account
-    let resultRegistryKeys = await registerKeys(mainAccount1, 97, resultGetKey.account1_spendPub, resultGetKey.account1_viewPub)
-    console.log(resultRegistryKeys)
+    let resultRegistryKeys = await registerKeys(web3, mainAccount1, 97, resultGetKey.account1_spendPub, resultGetKey.account1_viewPub)
+    console.log("acc1 registed")
+    let resultRegistryKeys2 = await registerKeys(web32, mainAccount2, 97, resultGetKey.account2_spendPub, resultGetKey.account2_viewPub)
+    console.log("acc2 registed")
+
+    let generateStealthAddressAcc1 = await generateStealthAddress(web3, mainAccount2, 97, resultGetKey.account2_spendPri, mainAccount1)
+    console.log(generateStealthAddressAcc1)
+
+
 
 
 }

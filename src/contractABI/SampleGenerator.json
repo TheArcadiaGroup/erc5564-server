@@ -455,9 +455,53 @@
     {
         "inputs": [
             {
+                "internalType": "bytes",
+                "name": "pub",
+                "type": "bytes"
+            }
+        ],
+        "name": "pubkeyToAddress_fix",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "addr",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "spendingPubKeyY",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "viewingPubKeyX",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "viewingPubKeyY",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "pure",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "address",
                 "name": "registrant",
                 "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "y0",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "z0",
+                "type": "uint256"
             }
         ],
         "name": "stealthKeys",
@@ -526,6 +570,11 @@
                 "internalType": "bytes32",
                 "name": "data",
                 "type": "bytes32"
+            },
+            {
+                "internalType": "uint256",
+                "name": "y0",
+                "type": "uint256"
             }
         ],
         "name": "toBytes",
@@ -558,6 +607,11 @@
                 "internalType": "uint256[3]",
                 "name": "P",
                 "type": "uint256[3]"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
             }
         ],
         "stateMutability": "pure",
@@ -574,6 +628,11 @@
                 "internalType": "uint256",
                 "name": "y0",
                 "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "z0",
+                "type": "uint256"
             }
         ],
         "name": "twice",
@@ -586,6 +645,11 @@
             {
                 "internalType": "uint256",
                 "name": "",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "z1",
                 "type": "uint256"
             }
         ],
@@ -655,6 +719,11 @@
                 "internalType": "bool",
                 "name": "",
                 "type": "bool"
+            },
+            {
+                "internalType": "uint256",
+                "name": "y",
+                "type": "uint256"
             }
         ],
         "stateMutability": "pure",
@@ -672,6 +741,11 @@
             {
                 "internalType": "uint256",
                 "name": "y",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "z",
                 "type": "uint256"
             }
         ],
