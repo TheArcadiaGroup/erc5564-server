@@ -7,6 +7,7 @@ import Web3Utils from "./helpers/web3"
 // const tokenHelper = require("./helpers/token");
 import RegistryBridgeABI from "./contractABI/SampleRegistry.json"
 import GeneratorABI from "./contractABI/SampleGenerator.json"
+import MessengerABI from "./contractABI/SampleMessenger.json"
 import { connect } from "./models/index";
 import { SettingModel } from "./models/settings/setting.model"
 import { UserModel } from "./models/users/user.model"
@@ -141,7 +142,103 @@ async function processPrivateTransferInfoEvent(
 }
 
 async function processRegistryEvent(event: any, networkId: any) {
-  
+
+  logger.info("New event at block %s", event.blockNumber);
+  console.log("EVENT processRegistryEvent : ", event.returnValues.registrant)
+  let registrant = event.returnValues.registrant
+  let generator = event.returnValues.generator
+  let spendingPubKey = event.returnValues.spendingPubKey
+  let viewingPubKey = event.returnValues.viewingPubKey
+
+  // save to DB
+
+  // let user = await UserModel.findOne({ registrant: registrant });
+
+  await UserModel.updateOne(
+    { registrant: registrant },
+    {
+      $set: {
+        generator: generator,
+        spendingPubKey: spendingPubKey,
+        viewingPubKey: viewingPubKey,
+      }
+    },
+    { upsert: true, new: true }
+  );
+
+  console.log("SAVE TO DB SETTING", registrant)
+
+
+
+
+
+
+  // let originChainId = event.returnValues._originChainId;
+  // let tokenAddress = event.returnValues._token.toLowerCase();
+  // // let token = await tokenHelper.getToken(tokenAddress, originChainId);
+
+  // let amount = event.returnValues._amount;
+
+  // let web3 = await Web3Utils.getWeb3(networkId);
+  // console.log("web3: ", web3)
+  // let block = await web3.eth.getBlock(event.blockNumber);
+  // console.log("blocknumber: ", block)
+
+  // // event RequestBridge(address indexed _token, bytes indexed _addr, uint256 _amount, uint256 _originChainId, uint256 _fromChainId, uint256 _toChainId, uint256 _index);
+  // let toAddrBytes = event.returnValues._toAddr;
+  // let decoded;
+  // try {
+  //   decoded = web3.eth.abi.decodeParameters(
+  //     [{ type: "string", name: "decodedAddress" }],
+  //     toAddrBytes
+  //   );
+  // } catch (e) {
+  //   logger.error("cannot decode recipient address");
+  //   console.log(e)
+  //   return;
+  // }
+  // let decodedAddress = decoded.decodedAddress;
+  // // let casperChainId = CasperConfig.networkId;
+  // // if (parseInt(event.returnValues._toChainId) === casperChainId) {
+  // //   logger.info("bridging to casper network %s", decodedAddress);
+  // //   if (decodedAddress.length === 64) {
+  // //     decodedAddress = "account-hash-" + decodedAddress
+  // //   }
+  // // }
+
+  // //reading transaction creator
+  // let transactionHash = event.transactionHash
+  // let onChainTx = await web3.eth.getTransaction(transactionHash)
+  // console.log("onchaintx: ", onChainTx)
+  // if (!onChainTx) return;
+  // let txCreator = onChainTx.from.toLowerCase()
+  // // await db.Transaction.updateOne(
+  // //   {
+  // //     index: event.returnValues._index,
+  // //     fromChainId: event.returnValues._fromChainId,
+  // //     toChainId: event.returnValues._toChainId,
+  // //   },
+  // //   {
+  // //     $set: {
+  // //       requestHash: event.transactionHash,
+  // //       requestBlock: event.blockNumber,
+  // //       account: decodedAddress.toLowerCase(),
+  // //       txCreator: txCreator,
+  // //       originToken: token.hash,
+  // //       originSymbol: token.symbol,
+  // //       fromChainId: event.returnValues._fromChainId,
+  // //       originChainId: event.returnValues._originChainId,
+  // //       toChainId: event.returnValues._toChainId,
+  // //       amount: amount,
+  // //       index: event.returnValues._index,
+  // //       requestTime: block.timestamp,
+  // //     },
+  // //   },
+  // //   { upsert: true, new: true }
+  // // );
+}
+async function processAnnouncementEvent(event: any, networkId: any) {
+
   logger.info("New event at block %s", event.blockNumber);
   console.log("EVENT processRegistryEvent : ", event.returnValues.registrant)
   let registrant = event.returnValues.registrant
@@ -237,7 +334,7 @@ async function processRegistryEvent(event: any, networkId: any) {
   // // );
 }
 
-async function getPastEventForBatch(networkId: string, registryAddress: string, step: number, from: string, to: string) {
+async function getPastEventForBatch(networkId: string, registryAddress: string, messengerAddress : string, generatorAddress : string,step: number, from: string, to: string) {
   console.log("Start getPastEventForBatch")
   let lastBlock = parseInt(to)
   let lastCrawl = parseInt(from)
@@ -260,32 +357,65 @@ async function getPastEventForBatch(networkId: string, registryAddress: string, 
         logger.warning("invalid RPC %s, try again", rpc_choosed)
         continue
       }
-      const contract = new web3.eth.Contract(RegistryBridgeABI, registryAddress);
-      logger.info(
-        "Network %s: Get Past Event from block %s to %s, lastblock %s of registry contract %s ",
-        networkId,
-        lastCrawl + 1,
-        toBlock,
-        lastBlock,
-        registryAddress
-      );
-      let allEvents = await contract.getPastEvents("allEvents", {
-        fromBlock: lastCrawl + 1,
-        toBlock: toBlock,
-      });
-      if (allEvents.length > 0) {
+      // Registry event
+      {
+        const contract = new web3.eth.Contract(RegistryBridgeABI, registryAddress);
         logger.info(
-          `network ${networkId}: there are ${allEvents.length} events from ${lastCrawl + 1
-          } to ${toBlock}`
+          "Network %s: Get Past Event from block %s to %s, lastblock %s of registry contract %s ",
+          networkId,
+          lastCrawl + 1,
+          toBlock,
+          lastBlock,
+          registryAddress
         );
-      }
-      for (let i = 0; i < allEvents.length; i++) {
-        let event = allEvents[i];
-        if (event.event === 'StealthKeyChanged') {
-          console.log("Find new RegisterKeys events")
-          await processRegistryEvent(event, networkId);
+        let allEvents = await contract.getPastEvents("allEvents", {
+          fromBlock: lastCrawl + 1,
+          toBlock: toBlock,
+        });
+        if (allEvents.length > 0) {
+          logger.info(
+            `network ${networkId}: there are ${allEvents.length} events from ${lastCrawl + 1
+            } to ${toBlock}`
+          );
+        }
+        for (let i = 0; i < allEvents.length; i++) {
+          let event = allEvents[i];
+          if (event.event === 'StealthKeyChanged') {
+            console.log("Find new RegisterKeys events")
+            await processRegistryEvent(event, networkId);
+          }
         }
       }
+      // Annoucement event
+      {
+        const contractAnnoun = new web3.eth.Contract(MessengerABI, messengerAddress);
+        logger.info(
+          "Network %s: Get Past Event from block %s to %s, lastblock %s of messenger contract %s ",
+          networkId,
+          lastCrawl + 1,
+          toBlock,
+          lastBlock,
+          messengerAddress
+        );
+        let allEvents = await contractAnnoun.getPastEvents("allEvents", {
+          fromBlock: lastCrawl + 1,
+          toBlock: toBlock,
+        });
+        if (allEvents.length > 0) {
+          logger.info(
+            `network ${networkId}: there are ${allEvents.length} events from ${lastCrawl + 1
+            } to ${toBlock}`
+          );
+        }
+        for (let i = 0; i < allEvents.length; i++) {
+          let event = allEvents[i];
+          if (event.event === 'Announcement') {
+            console.log("Find new Announcement events")
+            await processAnnouncementEvent(event, networkId);
+          }
+        }
+      }
+
       await sleep(1000);
       lastCrawl = toBlock;
     } catch (e) {
@@ -301,7 +431,7 @@ async function getPastEventForBatch(networkId: string, registryAddress: string, 
  * @param bridgeAddress contract address of bridge in this network
  * @param step step per time
  */
-async function getPastEvent(networkId: string, registryAddress: string, step: number) {
+async function getPastEvent(networkId: string, registryAddress: string, messengerAddress: string,  generatorAddress: string, step: number) {
   console.log("Start getPastEvent")
 
   try {
@@ -348,7 +478,7 @@ async function getPastEvent(networkId: string, registryAddress: string, step: nu
         to = lastBlock
       }
       console.log("push task: ", networkId, registryAddress, step, from, to)
-      tasks.push(getPastEventForBatch(networkId, registryAddress, step, from, to))
+      tasks.push(getPastEventForBatch(networkId, registryAddress, messengerAddress , generatorAddress , step, from, to))
     }
 
     await Promise.all(tasks)
@@ -369,13 +499,13 @@ async function getPastEvent(networkId: string, registryAddress: string, step: nu
  * @param networkId network id (or chain id) of EVM a network
  * @param bridgeAddress contract address of bridge in this network
  */
-async function watch(networkId: string, registryAddress: string) {
+async function watch(networkId: string, registryAddress: string, messengerAddress: string, generatorAddress: string ) {
   console.log("network: ", networkId, "registryAddress: ", registryAddress);
   let step = 1000;
-  await getPastEvent(networkId, registryAddress, step);
+  await getPastEvent(networkId, registryAddress, messengerAddress, generatorAddress, step);
 
   setInterval(async () => {
-    await getPastEvent(networkId, registryAddress, step);
+    await getPastEvent(networkId, registryAddress, messengerAddress, generatorAddress, step);
   }, 10000);
 }
 
@@ -416,10 +546,16 @@ function main() {
   networks.forEach((networkId) => {
     console.log("contracts[networkId]: ", contracts[networkId])
     // if (crawlChainId.includes(parseInt(networkId))) {
-    let contractAddress = contracts[networkId].registryAddress
-    console.log("contractAddress: ", contractAddress)
-    if (contractAddress !== "") {
-      watch(networkId, contractAddress)
+    let registryAddress = contracts[networkId].registryAddress
+    console.log("registryAddress: ", registryAddress)
+    let messengerAddress = contracts[networkId].announceAddress
+    console.log("messengerAddress: ", messengerAddress)
+    let generatorAddress = contracts[networkId].generatorAddress
+    console.log("generatorAddress: ", generatorAddress)
+
+    if (registryAddress !== "" && messengerAddress !== "" && generatorAddress !== "") {
+      console.log("START !!!")
+      watch(networkId, registryAddress, messengerAddress, generatorAddress)
     }
     // }
   })
