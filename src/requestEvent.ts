@@ -11,8 +11,10 @@ import MessengerABI from "./contractABI/SampleMessenger.json"
 import { connect } from "./models/index";
 import { SettingModel } from "./models/settings/setting.model"
 import { UserModel } from "./models/users/user.model"
+import { TransactionModel } from "./models/transactions/transaction.model"
 
 import * as Account from "web3-eth-accounts"
+import { timeStamp } from "console";
 // const CasperHelper = require("./helpers/casper");
 // const CasperConfig = CasperHelper.getConfigInfo();
 BigNumber.config({ EXPONENTIAL_AT: [-100, 100] });
@@ -240,29 +242,42 @@ async function processRegistryEvent(event: any, networkId: any) {
 async function processAnnouncementEvent(event: any, networkId: any) {
 
   logger.info("New event at block %s", event.blockNumber);
-  console.log("EVENT processRegistryEvent : ", event.returnValues.registrant)
-  let registrant = event.returnValues.registrant
-  let generator = event.returnValues.generator
-  let spendingPubKey = event.returnValues.spendingPubKey
-  let viewingPubKey = event.returnValues.viewingPubKey
+  console.log("EVENT  : ", event)
+
+  console.log(" event.returnValues : ", event.returnValues)
+  let ephemeralPubKey = event.returnValues.ephemeralPubKey // spendPubkey of sender
+  let stealthRecipientAndViewTag = event.returnValues.stealthRecipientAndViewTag // 20 byte stealthAddress and 12 byte of viewtag
+  let metadata = event.returnValues.metadata // 20 bytes token address and 12 bytes amount
+  console.log("stealthRecipientAndViewTag: ", stealthRecipientAndViewTag)
+  let stealthRecipient = stealthRecipientAndViewTag.toLowerCase().slice(0, 42)
+  let viewTag = stealthRecipientAndViewTag.toLowerCase().slice(42, 66)
+  logger.info("StealthAddress: %s %s", stealthRecipient, viewTag)
+  let hash = event.transactionHash
+  let web3 = await Web3Utils.getWeb3(networkId);
+  let block = await web3.eth.getBlock(event.blockNumber);
+  let timestamps = block.timestamp
+
 
   // save to DB
 
-  // let user = await UserModel.findOne({ registrant: registrant });
+  // let transaction = await TransactionModel.findOne({ registrant: registrant });
 
-  await UserModel.updateOne(
-    { registrant: registrant },
+  await TransactionModel.updateOne(
+    { hash: hash,
+      timestamps : timestamps},
     {
       $set: {
-        generator: generator,
-        spendingPubKey: spendingPubKey,
-        viewingPubKey: viewingPubKey,
+        ephemeralPubKey: ephemeralPubKey,
+        stealthRecipientAndViewTag: stealthRecipientAndViewTag,
+        metadata: metadata,
+        stealthRecipient: stealthRecipient,
+        viewTag: viewTag,
       }
     },
     { upsert: true, new: true }
   );
 
-  console.log("SAVE TO DB SETTING", registrant)
+  console.log("SAVE TO DB Transaction", hash)
 
 
 
@@ -334,7 +349,7 @@ async function processAnnouncementEvent(event: any, networkId: any) {
   // // );
 }
 
-async function getPastEventForBatch(networkId: string, registryAddress: string, messengerAddress : string, generatorAddress : string,step: number, from: string, to: string) {
+async function getPastEventForBatch(networkId: string, registryAddress: string, messengerAddress: string, generatorAddress: string, step: number, from: string, to: string) {
   console.log("Start getPastEventForBatch")
   let lastBlock = parseInt(to)
   let lastCrawl = parseInt(from)
@@ -410,6 +425,8 @@ async function getPastEventForBatch(networkId: string, registryAddress: string, 
         for (let i = 0; i < allEvents.length; i++) {
           let event = allEvents[i];
           if (event.event === 'Announcement') {
+            console.log("=================")
+
             console.log("Find new Announcement events")
             await processAnnouncementEvent(event, networkId);
           }
@@ -431,7 +448,7 @@ async function getPastEventForBatch(networkId: string, registryAddress: string, 
  * @param bridgeAddress contract address of bridge in this network
  * @param step step per time
  */
-async function getPastEvent(networkId: string, registryAddress: string, messengerAddress: string,  generatorAddress: string, step: number) {
+async function getPastEvent(networkId: string, registryAddress: string, messengerAddress: string, generatorAddress: string, step: number) {
   console.log("Start getPastEvent")
 
   try {
@@ -447,7 +464,7 @@ async function getPastEvent(networkId: string, registryAddress: string, messenge
     console.log("lastCrawl: ", lastCrawl)
 
     if (lastCrawl === null) {
-      lastCrawl = 27595600
+      lastCrawl = 27919810
     }
 
     console.log("getPassEvent networkId : ", networkId)
@@ -478,7 +495,7 @@ async function getPastEvent(networkId: string, registryAddress: string, messenge
         to = lastBlock
       }
       console.log("push task: ", networkId, registryAddress, step, from, to)
-      tasks.push(getPastEventForBatch(networkId, registryAddress, messengerAddress , generatorAddress , step, from, to))
+      tasks.push(getPastEventForBatch(networkId, registryAddress, messengerAddress, generatorAddress, step, from, to))
     }
 
     await Promise.all(tasks)
@@ -499,7 +516,7 @@ async function getPastEvent(networkId: string, registryAddress: string, messenge
  * @param networkId network id (or chain id) of EVM a network
  * @param bridgeAddress contract address of bridge in this network
  */
-async function watch(networkId: string, registryAddress: string, messengerAddress: string, generatorAddress: string ) {
+async function watch(networkId: string, registryAddress: string, messengerAddress: string, generatorAddress: string) {
   console.log("network: ", networkId, "registryAddress: ", registryAddress);
   let step = 1000;
   await getPastEvent(networkId, registryAddress, messengerAddress, generatorAddress, step);

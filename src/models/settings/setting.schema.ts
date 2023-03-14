@@ -8,7 +8,7 @@ import { Schema } from "mongoose";
 const SettingSchema = new Schema({
     networkId : {type: String},
     lastBlockRequest: {type: Number, required: true},
-    lastBlockClaim: {type: Number, required: true}
+    // lastBlockClaim: {type: Number, required: true}
 }, { timestamps: false })
 export default SettingSchema
 

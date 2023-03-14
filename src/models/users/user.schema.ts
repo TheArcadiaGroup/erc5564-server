@@ -9,7 +9,9 @@ const UserSchema = new Schema({
     registrant : {type: String, require : true},
     generator: {type: String, required: true},
     spendingPubKey: {type: String, required: true},
-    viewingPubKey: {type: String, required: true}
+    viewingPubKey: {type: String, required: true},
+    // hash: {type: String, required: true},
+    // timestamps: {type: String, required: true}
 
 }, { timestamps: false })
 export default UserSchema

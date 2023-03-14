@@ -4,6 +4,8 @@ export interface IUser {
     generator: string;
     spendingPubKey: string;
     viewingPubKey : string;
+    // hash: string;
+    // timestamps: string;
 }
 export interface IUserDocument extends IUser, Document {}
 export interface IUserModel extends Model<IUserDocument> {}
