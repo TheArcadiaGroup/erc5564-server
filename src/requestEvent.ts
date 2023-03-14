@@ -140,9 +140,8 @@ async function processPrivateTransferInfoEvent(
   // );
 }
 
-async function processRegistryEvent(
-  event: any,
-  networkId: any) {
+async function processRegistryEvent(event: any, networkId: any) {
+  
   logger.info("New event at block %s", event.blockNumber);
   console.log("EVENT processRegistryEvent : ", event.returnValues.registrant)
   let registrant = event.returnValues.registrant

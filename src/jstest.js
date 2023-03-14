@@ -124,7 +124,7 @@ async function generateStealthAddress(web3, registrant, networkId, ephemeralPriv
     const contractGenerator = new web3.eth.Contract(GeneratorABI, contractGeneratorAddress);
     let _ephemeralPrivKey = "0x" + ephemeralPrivKey
 
-    const result = await contractGenerator.methods.generateStealthAddress(registrant, _ephemeralPrivKey).send({ from: addressCallFunction });
+    const result = await contractGenerator.methods.generateStealthAddress(registrant, _ephemeralPrivKey).call({ from: addressCallFunction });
     console.log(result)
     return {
         stealthAddress: result[0],
@@ -160,11 +160,20 @@ async function registerKeys(web3, addressCallFunction, networkId, spendingPubKey
 
 }
 
+async function privateETHTransfer(web3, addressCallFunction, networkId, to, ephemeralPubKey, stealthRecipientAndViewTag, metadata) {
+
+    let contractMessengerAddress = config.contracts[networkId].announceAddress
+    const contractMessenger = new web3.eth.Contract(MessengerABI, contractMessengerAddress)
+
+    const result = await contractMessenger.methods.privateETHTransfer(to, ephemeralPubKey, stealthRecipientAndViewTag, metadata).send({ from: addressCallFunction });
+    console.log(result)
+}
+
 
 
 async function main() {
-    let acc1 = '0xDAf16065A7581f867294860735a3b53EB2dA00A6'
-    let acc2 = '0x4385F9532855d149068A32e42b07687264a94EEA'
+    // let acc1 = '0xDAf16065A7581f867294860735a3b53EB2dA00A6'
+    // let acc2 = '0x4385F9532855d149068A32e42b07687264a94EEA'
     // get rpc
     let both = await Web3Utils.getWeb3AndRPC(97);
     let rpc = both.rpc
@@ -180,7 +189,6 @@ async function main() {
     const web32 = new Web3(new PrivateKeyProvider(privateKey2, rpc));
     const accounts2 = await web32.eth.getAccounts();
     const mainAccount2 = accounts2[0];
-
     // getkey
     let resultGetKey = await getKey();
     // console.log(resultGetKey)
@@ -193,8 +201,8 @@ async function main() {
     let generateStealthAddressAcc1 = await generateStealthAddress(web3, mainAccount2, 97, resultGetKey.account2_spendPri, mainAccount1)
     console.log(generateStealthAddressAcc1)
 
-
-
+    let privateEthTransfer = await privateETHTransfer(web3, mainAccount1, 97, generateStealthAddressAcc1.stealthAddress, generateStealthAddressAcc1.ephemeralPubKey, generateStealthAddressAcc1.viewTag, '0x1111111111111111111111111111111111111111000000000000000000000001')
+    console.log("tranfer")
 
 }
 main()
