@@ -99,6 +99,23 @@ async function getKey() {
 
 
 }
+async function getRandomEphemralKey() {
+    let ephemeralPri = await randomBytes(32)
+    const ephemeralPriHex = Buffer.from(ephemeralPri).toString("hex")
+    console.log("ephemeralPriHex : ", ephemeralPriHex)
+    const ephemeralPub = secp256k1.publicKeyCreate(ephemeralPri, false)
+    let ephemeralPubHex = Buffer.from(ephemeralPub).toString("hex")
+
+    console.log(" ephemeralPubHex :", ephemeralPubHex)
+
+    return {
+        ephemeralPri: ephemeralPriHex,
+        ephemeralPub: ephemeralPubHex,
+    }
+
+
+
+}
 async function readStealthKeys(registrant, networkId) {
 
     let both = await Web3Utils.getWeb3AndRPC(networkId);
@@ -125,7 +142,7 @@ async function generateStealthAddress(web3, registrant, networkId, ephemeralPriv
     let _ephemeralPrivKey = "0x" + ephemeralPrivKey
 
     const result = await contractGenerator.methods.generateStealthAddress(registrant, _ephemeralPrivKey).call({ from: addressCallFunction });
-    console.log(result)
+    // console.log(result)
     return {
         stealthAddress: result[0],
         ephemeralPubKey: result[1],
@@ -145,16 +162,16 @@ async function registerKeys(web3, addressCallFunction, networkId, spendingPubKey
         const contractRegistry = new web3.eth.Contract(RegistryABI, contractRegistyAddress)
         const _spendPub = "0x" + spendingPubKey
         const _viewPub = "0x" + viewingPubKey
-        console.log("khai", addressCallFunction)
+        // console.log("khai", addressCallFunction)
         const result = await contractRegistry.methods
             .registerKeys(contractGeneratorAddress, _spendPub, _viewPub)
             .send({ from: addressCallFunction }, async function (err, data) {
-                console.log('kkkkk', err, data)
+                // console.log('kkkkk', err, data)
             });
         console.log("done")
         // console.log(result)
 
-    } catch (e) { 
+    } catch (e) {
         console.log(e)
     }
 
@@ -164,9 +181,10 @@ async function privateETHTransfer(web3, addressCallFunction, networkId, to, ephe
 
     let contractMessengerAddress = config.contracts[networkId].announceAddress
     const contractMessenger = new web3.eth.Contract(MessengerABI, contractMessengerAddress)
+    let _ephemeralPubKey = '0x' + ephemeralPubKey
 
-    const result = await contractMessenger.methods.privateETHTransfer(to, ephemeralPubKey, stealthRecipientAndViewTag, metadata).send({ from: addressCallFunction });
-    console.log(result)
+    const result = await contractMessenger.methods.privateETHTransfer(to, _ephemeralPubKey, stealthRecipientAndViewTag, metadata).send({ from: addressCallFunction });
+    // console.log(result)
 }
 
 
@@ -198,11 +216,16 @@ async function main() {
     let resultRegistryKeys2 = await registerKeys(web32, mainAccount2, 97, resultGetKey.account2_spendPub, resultGetKey.account2_viewPub)
     console.log("acc2 registed")
 
-    let generateStealthAddressAcc1 = await generateStealthAddress(web3, mainAccount2, 97, resultGetKey.account2_spendPri, mainAccount1)
-    console.log(generateStealthAddressAcc1)
+    for (var i = 0; i < 100; i++) {
 
-    let privateEthTransfer = await privateETHTransfer(web3, mainAccount1, 97, generateStealthAddressAcc1.stealthAddress, generateStealthAddressAcc1.ephemeralPubKey, generateStealthAddressAcc1.viewTag, '0x1111111111111111111111111111111111111111000000000000000000000001')
-    console.log("tranfer")
+        let randomEpphemeral = await getRandomEphemralKey()
+
+        let generateStealthAddressAcc1 = await generateStealthAddress(web3, mainAccount2, 97, randomEpphemeral.ephemeralPri, mainAccount1)
+        // console.log(generateStealthAddressAcc1)
+
+        let privateEthTransfer = await privateETHTransfer(web3, mainAccount1, 97, generateStealthAddressAcc1.stealthAddress, randomEpphemeral.ephemeralPub, generateStealthAddressAcc1.viewTag, '0x1111111111111111111111111111111111111111000000000000000000000001')
+        console.log("tranfer %s ", i)
+    }
 
 }
 main()
