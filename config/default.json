@@ -27,7 +27,7 @@
     },
     "97": {
       "httpProvider": [
-        "https://data-seed-prebsc-2-s1.binance.org:8545/",
+        "https://bsc-testnet.public.blastapi.io",
         "https://data-seed-prebsc-1-s1.binance.org:8545/",
         "https://data-seed-prebsc-1-s2.binance.org:8545/",
         "https://data-seed-prebsc-2-s2.binance.org:8545/"
@@ -41,10 +41,10 @@
   },
   "contracts": {
     "97": {
-      "registryAddress": "0x43EEA1D841dAEe4204a3c99153E4f88D98D35336",
-      "announceAddress": "0x5cdDc938446487a1ae51cB7D6630Bee818d9875A",
-      "generatorAddress": "0xd0cC9f512C537aeEACD42a9c90471FB31DbaeFfB",
-      "firstBlockCrawl": 27919810
+      "registryAddress": "0xC5C5E29564cB9a19FdbcaA30B20E079cC63E1142",
+      "announceAddress": "0x587CF33b4cA5F18f02dA31DeFBBbc0fe6C6311f0",
+      "generatorAddress": "0x0ae7F5Df9960701F11c3a784BE40933c03DdCB9A",
+      "firstBlockCrawl": 28183014
     }
   },
   "db": {
