@@ -20,6 +20,8 @@ var ec = new EC('secp256k1');
 const BN = require('bn.js');
 const secp256k1 = require('secp256k1')
 const { keccak256 } = require("ethereumjs-util");
+import { readFileSync, writeFileSync } from 'fs';
+
 
 connect();
 console.log("connect sc")
@@ -258,27 +260,53 @@ router.get('/checkstealthaddress',
 
                     if (thisStealthAddress == stealthAddress) {
                         console.log("This is your stealth address ", stealthAddress)
-                        return res.json({ result: true})
+                        return res.json({ result: true })
                     } else {
                         console.log("This is NOT yout stealth address ", stealthAddress)
-                        return res.json({ result: false})
+                        return res.json({ result: false })
                     }
 
                 } catch (e) {
                     console.log(e)
-                    return res.json({ result: false})
+                    return res.json({ result: false })
                 }
             } else {
                 console.log("Invalid stealth address")
-                return res.json({ result: false})
+                return res.json({ result: false })
             }
         }
         catch (e) {
             console.log(e)
-            return res.json({ result: false})
+            return res.json({ result: false })
         }
     },
 )
+
+router.get('/getdb', [], async function (req: any, res: any) {
+
+
+    let jsonObj: { [key: string]: any } = {}
+    try {
+        let allTransactions = await TransactionModel.find()
+        if (allTransactions) {
+            for (var i = 0; i < allTransactions.length; i++) {
+                jsonObj[i] = allTransactions[i]
+            }
+        }
+
+        // write data to file
+        writeFileSync('db.json', JSON.stringify(jsonObj, null, 2));
+
+
+        return res.json({ allTransactions: jsonObj })
+
+    } catch (e) {
+        console.log(e)
+        return res.json({ db: [] })
+    }
+
+})
+
 
 
 
