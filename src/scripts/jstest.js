@@ -8,19 +8,19 @@ const privateKeyToPublicKey = require('ethereum-private-key-to-public-key')
 var PrivateKeyProvider = require("truffle-privatekey-provider");
 const secp256k1 = require('secp256k1')
 const { randomBytes } = require('crypto')
-const RegistryABI = require("./contractABI/SampleRegistry.json")
-const GeneratorABI = require("./contractABI/SampleGenerator.json")
-const MessengerABI = require("./contractABI/SampleMessenger.json")
-const Web3Utils = require("./helpers/web3");
-// const db = require("./models");
+const RegistryABI = require("../contractABI/SampleRegistry.json")
+const GeneratorABI = require("../contractABI/SampleGenerator.json")
+const MessengerABI = require("../contractABI/SampleMessenger.json")
+const Web3Utils = require("../helpers/web3");
+// const db = require("../models");
 const { keccak256 } = require("ethereumjs-util");
 var EC = require('elliptic').ec;
 var ec = new EC('secp256k1');
 const BN = require('bn.js');
 const { default: BigNumber } = require("bignumber.js");
-let gx = "6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296"
+let gx = "79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798"
 
-let gy = "4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5"
+let gy = "483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8"
 
 async function getRandomHex() {
     let hex = await Web3.utils.randomHex(32)
@@ -49,7 +49,7 @@ function addPoints(a, b) {
     return [sumPoint.getX().toString("hex"), sumPoint.getY().toString("hex")]; // Return the x and y coordinates as strings
 }
 
-function pubkeyToAddress_fix(pub) {
+function pubkeyToAddress(pub) {
     let hash = keccak256(pub);
     // console.log(hash)
     hash = hash.toString("hex")
@@ -119,9 +119,9 @@ async function getKey() {
 }
 async function getRandomEphemralKey() {
     let ephemeralPri = await randomBytes(32)
-    const ephemeralPriHex = Buffer.from(ephemeralPri).toString("hex")
+    const ephemeralPriHex = Buffer.from(ephemeralPri).toString("hex") // "d5083da744f6dd22b06c47b081ee2492df67d0ec3586877476df7b0f700bf932" //Buffer.from(ephemeralPri).toString("hex")
     console.log("ephemeralPriHex : ", ephemeralPriHex)
-    const ephemeralPub = secp256k1.publicKeyCreate(ephemeralPri, false)
+    const ephemeralPub = secp256k1.publicKeyCreate(Uint8Array.from(Buffer.from(ephemeralPriHex, "hex")), false)
     let ephemeralPubHex = Buffer.from(ephemeralPub).toString("hex").slice(2)
 
     console.log(" ephemeralPubHex :", ephemeralPubHex)
@@ -135,12 +135,13 @@ async function getRandomEphemralKey() {
 
 }
 
-function getRandomEphemralKey_2(ephemeralPriHex) {
+function multiPrivateKeyWithG(ephemeralPriHex) {
     console.log(ephemeralPriHex)
     let kk = multiplyScalar(gx, gy, convertToBN(ephemeralPriHex))
     console.log(convertToBN(ephemeralPriHex).toString("hex"))
+    let pubkey = kk[0] + kk[1]
 
-    console.log(" ephemeralPubHex :", kk)
+    console.log(" ephemeralPubHex :", pubkey)
 
     // return {
     //     ephemeralPri: ephemeralPriHex,
@@ -227,7 +228,7 @@ async function privateETHTransfer(web3, addressCallFunction, networkId, to, ephe
     const result = await contractMessenger.methods.privateETHTransfer(to, _ephemeralPubKey, stealthRecipientAndViewTag, metadata).send({ from: addressCallFunction });
     // console.log(result)
 }
-async function getBackStealthKey(userAddress, networkId, useViewPrivateKey) {
+async function checkStealthAddress(userAddress, networkId, useViewPrivateKey) {
 
     // This part is OK
 
@@ -251,17 +252,19 @@ async function getBackStealthKey(userAddress, networkId, useViewPrivateKey) {
 
     // get SharedSecretPoint
 
-
-
-    // let allTransactions = await db.Transaction.find()
-    // await Promise.all(allTransactions.map(async (s) => {
-    // let ephemeralPub = s.ephemeralPubKey
-    let ephemeralPub = "0xb3a7d0822cce52fd771411e5e3b0e3db3d1124b9f80c8da0f524e72c5b55bf9d06c75a72391dd5a37a307f59c5c9f5129de13d932d050cad76cb40f905c75a07"
+    let allTransactions = await db.Transaction.find()
+    if (allTransactions) {
+        let result = []
+    try {
+        await Promise.all(allTransactions.map(async (s) => {
+            let ephemeralPub = s.ephemeralPubKey
+    // let ephemeralPub = "0x40812524c93b230f7be3f478f262c23b13e2ccd907fbbb0a3e74b20e75a3583157332d906f7dda1031f3ccdca1f985bd2c21186128368eb88898d779eb12e89f"
+    // let ephemeralPub = "0x145a717771bde055209bc08fbefac240fcde5291d0fbb1af6236c09a6262ff3927f3e750f5c20eb36756bf77be8e41c3bc09fd5c2663c84184fc2343f7c1531f"
     let _ephemeralPub
     if (ephemeralPub.length == 132) {
 
         _ephemeralPub = ephemeralPub.slice(4)
-    } else if (ephemeralPub.length = 130) {
+    } else if (ephemeralPub.length == 130) {
         _ephemeralPub = ephemeralPub.slice(2)
     } else if (ephemeralPub.length == 128) {
         _ephemeralPub = ephemeralPub
@@ -275,6 +278,7 @@ async function getBackStealthKey(userAddress, networkId, useViewPrivateKey) {
     let getSharedSecretXY = multiplyScalar(xHex, yHex, convertToBN(useViewPrivateKey));
     let sharedSecret = Buffer.from(getSharedSecretXY[0] + getSharedSecretXY[1], "hex") //Buffer.concat([Buffer.from(result1[0], "hex"), Buffer.from(result1[1], "hex")])
 
+    console.log("shared secret : ", Buffer.from(sharedSecret).toString("hex"))
     let sharedSecretHash = keccak256(sharedSecret).toString("hex")
     console.log("sharedSecretHash: ", sharedSecretHash)
     let getSharedSecretPointXY = multiplyScalar(gx, gy, convertToBN(sharedSecretHash))
@@ -297,20 +301,25 @@ async function getBackStealthKey(userAddress, networkId, useViewPrivateKey) {
     let pointA = makePoint(aA, bB)
     let pointB = makePoint(spendPubX, spendPubY)
     let pointC = addPoints(pointA, pointB)
-    // let pointA = ec.keyFromPublic({aA, bB}, "hex").getPublic()
-    // let pointB = ec.keyFromPublic({spendPubX, spendPubY}, "hex").getPublic()
-    // let result4 = addPoints(spendPubX, spendPubY, aA, bB)
-
-    // let result4 = addPoint(spendPubX, spendPubY, a2, b2, xHex, yHex)
 
     let stealthPubKey = Buffer.from(pointC[0] + pointC[1], "hex")//Buffer.concat([Buffer.from(pointC[0], "hex"), (Buffer.from(pointC[1], "hex"))])
 
-    let stealthAddress = pubkeyToAddress_fix(stealthPubKey)
-    // let stealthAddress = crypto.
+
+    let stealthAddress = pubkeyToAddress(stealthPubKey)
     console.log(stealthAddress)
 
+    if (stealthAddress == s.stealthAddress) {
+        console.log("Find your new Stealth Address ", stealthAddress)
+        result.push(stealthAddress)
+    }
 
-    // }))
+        }))
+
+    } catch (e) {
+        console.log(e)
+    }
+    }
+
 
 
 
@@ -349,9 +358,10 @@ async function runTestTransactions() {
 
     try {
 
-        for (var i = 0; i < 1; i++) {
+        for (var i = 0; i < 3; i++) {
 
             let randomEpphemeral = await getRandomEphemralKey()
+
 
             let generateStealthAddressAcc1 = await generateStealthAddress(web3, mainAccount2, 97, randomEpphemeral.ephemeralPri, mainAccount1)
             console.log("generateStealthAddressAcc1 ", generateStealthAddressAcc1)
@@ -365,8 +375,9 @@ async function runTestTransactions() {
 
 }
 async function main() {
-    let viewingPrivate1ToHex = "59f3768475dd1be73d8994c3eecfadf88e46911e06005257c266a1ff328bcee5"
+    await runTestTransactions()
+    // let viewingPrivate1ToHex = "cd4a01e301ddbc4e06bb4193a02b362db4da3ed6d545e1087866ef6608a6c8d9"
 
-    await getBackStealthKey("0x4385F9532855d149068A32e42b07687264a94EEA", 97, viewingPrivate1ToHex)
+    // await checkStealthAddress("0x4385F9532855d149068A32e42b07687264a94EEA", 97, viewingPrivate1ToHex)
 }
 main()

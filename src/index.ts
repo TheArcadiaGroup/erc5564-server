@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv";
 dotenv.config();
+const config = require("config");
 
 import express, { Application, Request, Response } from "express";
 import bodyParser from "body-parser";
@@ -28,9 +29,12 @@ app.use(morgan('common'))
 app.use(require('./api'))
 
 //if you want only your frontend to connect
-app.use(cors({ origin: "http://localhost:3000" }))
+// app.use(cors({ origin: "http://localhost:000" }))
 
-const PORT = process.env.PORT || 3000;
+//const PORT = process.env.PORT || 3000;
+
+const PORT = config.server["port"]
+console.log(PORT)
 
 
 app.listen(PORT, () => {

@@ -1,7 +1,7 @@
 {
   "server": {
     "host": "0.0.0.0",
-    "port": 3000
+    "port": 8000
   },
   "nativeAddress": "0x1111111111111111111111111111111111111111",
   "logs": {
@@ -41,10 +41,10 @@
   },
   "contracts": {
     "97": {
-      "registryAddress": "0xC5C5E29564cB9a19FdbcaA30B20E079cC63E1142",
-      "announceAddress": "0x587CF33b4cA5F18f02dA31DeFBBbc0fe6C6311f0",
-      "generatorAddress": "0x0ae7F5Df9960701F11c3a784BE40933c03DdCB9A",
-      "firstBlockCrawl": 28183014
+      "registryAddress": "0x012896195c0835557B1ef4786F70fe8E57BF1725",
+      "announceAddress": "0x5C4256a92C65eb1d3Cea794bADD165bdaEA64740",
+      "generatorAddress": "0xB512bc381744519345cc9c02389F553b4135E0d3",
+      "firstBlockCrawl": 28213770
     }
   },
   "db": {

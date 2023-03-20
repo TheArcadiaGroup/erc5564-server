@@ -1,12 +1,5 @@
-const config = require('config')
+
 let GeneralHelper = {
-    getEndPoint: () => {
-      const config = require('config')
-      if (config.caspernetwork == "mainnet") {
-        return "https://bridge-mainnet.dotoracle.network"
-      }
-      return "https://api.dotoracle.network"
-    },
     randomNumber: (min, max) => {
       return Math.floor(Math.random() * (max - min + 1)) + min
     },
@@ -29,19 +22,6 @@ let GeneralHelper = {
     capitalize: (str) => {
       return str.charAt(0).toUpperCase() + str.slice(1)
     },
-    tryCallWithTrial: async (func, trial = 10, waitTime = 2000) => {
-      while(trial > 0) {
-        try {
-          let ret = await func()
-          return ret
-        } catch (e) {
-          console.warn(e.toString())
-          await GeneralHelper.sleep(waitTime)
-        }
-        trial--
-      }
-      return undefined
-    }
   }
   
   module.exports = GeneralHelper
