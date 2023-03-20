@@ -8,7 +8,8 @@
     "build": "tsc",
     "requestEvent": " npm run build && node dist/requestEvent.js",
     "test": " npm run build && node dist/test.js",
-    "api": "npm run build && node dist/index.js"
+    "api": "npm run build && node dist/index.js",
+    "local" : "npm run build && node dist/src/local.js"
   },
   "author": "",
   "license": "ISC",
